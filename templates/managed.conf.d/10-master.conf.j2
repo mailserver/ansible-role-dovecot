@@ -1,0 +1,54 @@
+service imap-login {
+  inet_listener imap {
+    address = "{{listen.v4}},[{{listen.v6}}]"
+    port = 143
+  }
+  inet_listener imaps {
+    port = 993
+  }
+}
+
+service lmtp {
+ unix_listener {{lmtp_socket_path}} {
+   mode = 0660
+   user = {{lmtp_socket_owner}} 
+   group = {{lmtp_socket_group}} 
+  }
+}
+
+service imap {
+
+}
+
+# TODO: What is this for?
+service auth {
+  
+  # Postfix SASL
+  unix_listener /var/spool/postfix/private/auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+
+  unix_listener auth-userdb {
+
+  }
+
+}
+
+service auth-worker {
+ user = $default_internal_user
+}
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+  service_count = 1
+}
+
+service managesieve {
+  process_limit = 1024
+}
+
+

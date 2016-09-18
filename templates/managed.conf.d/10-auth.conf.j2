@@ -1,0 +1,15 @@
+auth_mechanisms = plain login
+disable_plaintext_auth = yes
+
+auth_debug=no
+
+passdb {
+  driver = sql 
+  args = {{dovecot_etc_dir}}/auth-sql.conf.ext 
+}
+userdb {
+  driver = sql
+  default_fields = uid={{vmail_user}} gid={{vmail_group}}
+  args = {{dovecot_etc_dir}}/auth-sql.conf.ext 
+}
+

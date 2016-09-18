@@ -1,0 +1,89 @@
+---
+
+- include: debian.yml
+  when: ansible_distribution == 'Debian'
+
+- include: freebsd.yml
+  when: ansible_distribution == 'FreeBSD'
+
+- name: Enable services
+  service: name=dovecot enabled=yes
+
+# TODO: Don't we need a home directory? Tilde is used in 90-sieve.conf.j2 
+- name: Create vmail user
+  user: name={{vmail_user}}
+        createhome=no
+        state=present
+
+
+# TODO: This should not actually create the directory. More like an assertion. ???
+- name: Create vmail directory
+  file: name={{vmail_directory}}
+        state=directory
+        owner={{vmail_user}} group={{vmail_group}}
+        mode=u="rwx,g=rwx,o="
+  notify:
+    - restart dovecot
+
+- name: Make sure configuration directories are present
+  file: path={{item}} state=directory
+  with_items:
+    - "{{dovecot_etc_dir}}"
+    - "{{dovecot_etc_dir}}/managed.conf.d"
+  notify:
+    - restart dovecot
+
+- name: Sync main config files
+  template: src={{item.src}} dest="{{dovecot_etc_dir}}/{{ item.src | replace(".j2", "") }}" mode={{item.mode | default("u=rw,g=r,o=r") }}
+  with_items:
+    - src: dovecot.conf.j2
+    - src: auth-sql.conf.ext.j2
+      mode: "u=rw,g=,o="
+    - src: dovecot-quota-warning-template-admin.txt.j2
+    - src: dovecot-quota-warning-template-user.txt.j2
+  notify:
+    - restart dovecot
+
+# TODO: Use the least ugly solution to take care of unmanaged config files in the target directory
+# Might involve http://stackoverflow.com/questions/16385507/ansible-delete-unmanaged-files-from-directory 
+- name: Sync conf.d files
+  template: src=managed.conf.d/{{item}}.j2 dest="{{dovecot_managed_conf_dir}}/{{item}}" mode="u=rw,g=r,o=r"
+  with_items:
+    - 10-auth.conf
+    - 10-logging.conf
+    - 10-mail.conf
+    - 10-master.conf
+    - 10-ssl.conf
+    - 15-lda.conf
+    - 15-mailboxes.conf
+    - 20-imapd.conf
+    - 20-lmtpd.conf
+    - 20-managesieve.conf
+    - 90-antispam.conf
+    - 90-quota.conf
+    - 90-sieve.conf
+  notify:
+    - restart dovecot
+
+- name: Sync custom scripts for quota warning
+  copy: src=dovecot-quota-warning.py dest={{dovecot_etc_dir}}/dovecot-quota-warning.py mode="u=rx,g=rx,o=rx"
+  notify:
+    - restart dovecot
+
+- name: Place quota warning request URL file
+  when: quota_notification_url is defined
+  copy: content={{quota_notification_url}}
+        dest={{dovecot_etc_dir}}/dovecot-quota-warning-request-url
+  notify:
+    - restart dovecot
+
+# Antispam bridge  
+#- name: 
+#    - src: sudoers.d/dovecot-antispam-sa-learn.j2
+#      mode: "u=rw,g=,o="
+#
+#- src: dovecot-antispam-sa-learn.sh
+#      mode: "u=rx,g=rx,o=rx"
+#      owner: "{{vmail_user}}"
+#      group: "{{vmail_group}}"
+#

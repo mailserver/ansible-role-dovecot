@@ -1,0 +1,11 @@
+mail_location = maildir:~/
+
+mail_gid = {{vmail_group}}
+mail_uid = {{vmail_user}}
+
+mail_plugins = $mail_plugins quota
+
+namespace inbox {
+  type = private
+  inbox = yes
+}

@@ -1,0 +1,43 @@
+# This file is opened as root, so it should be owned by root and mode 0600.
+
+driver = mysql
+
+connect = host={{mysql.host}} dbname={{mysql.database}} user={{mysql.user}} password={{mysql.password}}{% if mysql.port is defined %} port={{mysql.port}}{% endif %}
+
+default_pass_scheme = SHA512
+
+# passdb query to retrieve the password. It can return fields:
+#   password - The user's password. This field must be returned.
+#   user - user@domain from the database. Needed with case-insensitive lookups.
+#   username and domain - An alternative way to represent the "user" field.
+#
+# The query can also return other fields which have a special meaning, see
+# http://wiki2.dovecot.org/PasswordDatabase/ExtraFields
+#
+# Commonly used available substitutions (see http://wiki2.dovecot.org/Variables
+# for full list):
+#   %u = entire user@domain
+#   %n = user part of user@domain
+#   %d = domain part of user@domain
+# 
+password_query = SELECT \
+	mail, \
+	passwd as password, \
+	CASE WHEN `home_quota_storage` LIKE '' THEN NULL ELSE CONCAT('*:bytes=', home_quota_storage) END AS userdb_quota_rule \
+	FROM account WHERE mail = '%u'
+
+# userdb query to retrieve the user information. It can return fields:
+#   uid - System UID (overrides mail_uid setting)
+#   gid - System GID (overrides mail_gid setting)
+#   home - Home directory
+#   mail - Mail location (overrides mail_location setting)
+#
+# None of these are strictly required.
+# uid and gid are defined in 10-auth.conf.
+user_query = SELECT \
+	CONCAT('{{vmail_directory}}/vhome/', home) AS home, \
+	CASE WHEN `home_quota_storage` LIKE '' THEN NULL ELSE CONCAT('*:bytes=', home_quota_storage) END AS quota_rule \
+	FROM account WHERE mail = '%u'
+
+# Query to get a list of all usernames.
+iterate_query = SELECT mail FROM account
