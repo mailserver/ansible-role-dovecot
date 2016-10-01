@@ -1,7 +1,7 @@
 mail_location = maildir:~/
 
-mail_gid = {{vmail_group}}
-mail_uid = {{vmail_user}}
+mail_gid = {{ _dovecot_config.vmail.group }}
+mail_uid = {{ _dovecot_config.vmail.user }}
 
 mail_plugins = $mail_plugins quota
 

@@ -9,12 +9,12 @@ plugin {
 }
 
 service quota-warning {
-  executable = script {{dovecot_etc_dir}}/dovecot-quota-warning.py
+  executable = script {{_dovecot_config.config_dir}}/dovecot-quota-warning.py
   # use some unprivileged user for executing the quota warnings
-  user = {{vmail_user}} 
+  user = {{ _dovecot_config.vmail.user }} 
   unix_listener quota-warning {
-  	user = {{vmail_user}} 
-  	group = {{vmail_group}}
+  	user = {{ _dovecot_config.vmail.user }} 
+  	group = {{ _dovecot_config.vmail.group }}
   	mode = 0660
   }
 }

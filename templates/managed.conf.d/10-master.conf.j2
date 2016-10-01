@@ -1,6 +1,7 @@
 service imap-login {
+  # TODO: Disable IMAP without encryption
   inet_listener imap {
-    address = "{{listen.v4}},[{{listen.v6}}]"
+    address = "{{ _dovecot_config.listen | join(',') }}"
     port = 143
   }
   inet_listener imaps {
@@ -9,10 +10,10 @@ service imap-login {
 }
 
 service lmtp {
- unix_listener {{lmtp_socket_path}} {
+ unix_listener {{ _dovecot_config.lmtp_socket.path }} {
    mode = 0660
-   user = {{lmtp_socket_owner}} 
-   group = {{lmtp_socket_group}} 
+   user = {{ _dovecot_config.lmtp_socket.owner }} 
+   group = {{ _dovecot_config.lmtp_socket.group }} 
   }
 }
 
@@ -50,5 +51,3 @@ service managesieve-login {
 service managesieve {
   process_limit = 1024
 }
-
-

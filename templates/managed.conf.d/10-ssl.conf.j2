@@ -1,7 +1,7 @@
 ssl = required 
-ssl_cert = <{{dovecot_ssl_certificate | mandatory}}
-ssl_key = <{{dovecot_ssl_key | mandatory}}
-ssl_dh_parameters_length = {{dh_parameters_length}}
+ssl_cert = <{{ _dovecot_config.ssl.certificate | mandatory }}
+ssl_key = <{{ _dovecot_config.ssl.key | mandatory }}
+ssl_dh_parameters_length = {{ _dovecot_config.ssl.dhparams.length }}
 
 ssl_protocols = !SSLv2 !SSLv3
 ssl_cipher_list =  HIGH:MEDIUM:!ADH:!RC4:!aNULL:!MD5:!DSS:!DES:!3DES:!SEED:!kRSA

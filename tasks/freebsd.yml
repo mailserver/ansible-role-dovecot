@@ -2,10 +2,11 @@
 
 # TODO use custom compile flags
 # Dovecot with MySQL support
-- name: Install Dovecot and plugins
-  pkgng: name={{item}} state=present
+- name: Dovecot and Plugins are installed
+  pkgng:
+    name: "{{ item }}"
+    state: present
   with_items:
     - dovecot2
     - dovecot2-antispam-plugin
     - dovecot-pigeonhole
-

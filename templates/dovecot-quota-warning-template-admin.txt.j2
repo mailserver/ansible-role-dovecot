@@ -1,5 +1,5 @@
-From: postmaster@{{hostname}}
-To: postmaster@{{hostname}}
+From: postmaster@{{ _dovecot_config.hostname }}
+To: postmaster@{{ _dovecot_config.hostname }}
 Subject: Dovecot: User Quota Exceeded
 
 ${user}'s mailbox has exceeded ${percent}%.

@@ -5,44 +5,47 @@ os:
   logdir: /var/log
   prefix: 
 
-policy_source: mysql
+dovecot_hostname: "mail.example.com"
 
-mysql:
-  host:
-  port:
-  user:
+dovecot_default_mysql:
+  host: "127.0.0.1"
+  port: 3306
+  user: "dovecot"
   password:
-  database:
+  database: "mail"
 
-managesieve_enabled: True
+dovecot_default_config:
+  policy_source: "mysql"
+  managesieve_enabled: true
 
-# Certificate location on the server
-dovecot_ssl_certificate: 
-dovecot_ssl_key: 
+  ssl:
+    key: "/etc/letsencrypt/live/{{ dovecot_hostname }}/privkey.pem"
+    certificate: "/etc/letsencrypt/live/{{ dovecot_hostname }}/fullchain.pem"
+    dhparams:
+      size: 2048
+      file: "{{ os.prefix }}/etc/ssl/postfix_dhparams.pem"
 
-dh_parameters_length: 2048
+  vmail:
+    user: vmail
+    group: vmail
+    directory: /var/vmail
 
-vmail_user: vmail
-vmail_group: vmail
-vmail_directory: /var/vmail
+  config_dir: "{{ os.prefix }}/etc/dovecot"
+  managed_config_dir: "{{ os.prefix }}/etc/dovecot/managed.conf.d"
 
-dovecot_etc_dir: "{{os.prefix}}/etc/dovecot"
-dovecot_managed_conf_dir: "{{os.prefix}}/etc/dovecot/managed.conf.d"
+  # Script that is called by the Dovecot-Antispam plugin when a user drags a message into either Spam or Ham IMAP folders
+  # Useful in combination with a sudo-bridge and sa-learn from Spamassassin to train the Bayes filter
+  # Should be owned by {{vmail_user}} and group should be {{vmail_group}}
+  antispam_learn_script: 
 
-# Script that is called by the Dovecot-Antispam plugin when a user drags a message into either Spam or Ham IMAP folders
-# Useful in combination with a sudo-bridge and sa-learn from Spamassassin to train the Bayes filter
-# Should be owned by {{vmail_user}} and group should be {{vmail_group}}
-antispam_learn_script: 
+  quota_notification_url: 
 
-quota_notification_url: 
+  # TODO no defaults
+  lmtp_socket:
+    path: /var/spool/postfix/private/dovecot-lmtp
+    owner: postfix
+    group: postfix
 
-# TODO no defaults
-lmtp_socket:
-  path: /var/spool/postfix/private/dovecot-lmtp
-  owner: postfix
-  group: postfix
-
-listen:
-  v4: "*"
-  v6: "::"
-
+  listen:
+    - "*"
+    - "[::]"

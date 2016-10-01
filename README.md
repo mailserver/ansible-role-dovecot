@@ -12,13 +12,16 @@ Examples
 
 ```yaml
 - role: mailserver.dovecot
-  hostname: "imap.example.com"
-  dovecot_ssl_certificate: "/etc/letsencrypt/live/imap.example.com/fullchain.pem"
-  dovecot_ssl_key: "/etc/letsencrypt/live/imap.example.com/privkey.pem"
-  dh_parameters_length: 2048
+  dovecot_hostname: "imap.example.com"
+  dovecot_config:
+    ssl:
+      certificate: "/etc/letsencrypt/live/imap.example.com/fullchain.pem"
+      key: "/etc/letsencrypt/live/imap.example.com/privkey.pem"
+      dhparam:
+        size: 2048
   mysql:
     host: '127.0.0.1'
     user: 'dovecot'
-    pass: 'correct horse battery staple'
+    password: 'correct horse battery staple'
     database: 'maildb'
 ```
