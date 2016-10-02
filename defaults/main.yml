@@ -31,21 +31,40 @@ dovecot_default_config:
     directory: /var/vmail
 
   config_dir: "{{ os.prefix }}/etc/dovecot"
-  managed_config_dir: "{{ os.prefix }}/etc/dovecot/managed.conf.d"
 
   # Script that is called by the Dovecot-Antispam plugin when a user drags a message into either Spam or Ham IMAP folders
   # Useful in combination with a sudo-bridge and sa-learn from Spamassassin to train the Bayes filter
   # Should be owned by {{vmail_user}} and group should be {{vmail_group}}
-  antispam_learn_script: 
+  # antispam_learn_script: 
 
-  quota_notification_url: 
+  quota_notification_url: "https://{{dovecot_hostname}}/quota_exceeded" 
 
-  # TODO no defaults
-  lmtp_socket:
-    path: /var/spool/postfix/private/dovecot-lmtp
-    owner: postfix
-    group: postfix
-
+  # IMAP / IMAPs socket
   listen:
     - "*"
     - "[::]"
+
+  # Authentication socket
+  auth:
+    listen: ["inet", "unix"]
+    inet:
+      addresses: ["::1"]
+      port: 10026
+    unix:
+      path: /var/spool/postfix/private/auth
+      owner: postfix
+      group: postfix
+      mode: 0660
+
+  # LMTP socket
+  lmtp:
+    listen: ["inet", "unix"]
+    inet:
+      addresses: ["::1"] 
+      port: 10025
+    unix:
+      path: /var/spool/postfix/private/dovecot-lmtp
+      owner: postfix
+      group: postfix
+      mode: 0660
+

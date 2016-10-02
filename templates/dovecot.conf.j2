@@ -1,7 +1,231 @@
-protocols = imap lmtp {{ 'sieve' if _dovecot_config.managesieve_enabled else '' }}
+{% if managesieve_enabled %}
+protocols = imap lmtp sieve
+{% else %}
+protocols = imap lmtp
+{% endif %}
 
-# Most of the actual configuration gets included below. The filenames are
-# first sorted by their ASCII value and parsed in that order. The 00-prefixes
-# in filenames are intended to make it easier to understand the ordering.
-!include {{ _dovecot_config.managed_config_dir }}/*.conf
+mail_plugins = $mail_plugins quota
 
+# Global authentication settings
+auth_mechanisms = plain login
+disable_plaintext_auth = yes
+auth_debug = no
+
+passdb {
+  driver = sql 
+  args = {{_dovecot_config.config_dir}}/auth-sql.conf.ext 
+}
+userdb {
+  driver = sql
+  default_fields = uid={{_dovecot_config.vmail.user}} gid={{_dovecot_config.vmail.group}}
+  args = {{_dovecot_config.config_dir}}/auth-sql.conf.ext 
+}
+# Global crypto settings
+ssl = required 
+ssl_cert = <{{_dovecot_config.ssl.certificate | mandatory}}
+ssl_key = <{{_dovecot_config.ssl.key | mandatory}}
+ssl_dh_parameters_length = {{_dovecot_config.ssl.dhparams.length}}
+ssl_protocols = !SSLv2 !SSLv3
+ssl_cipher_list =  HIGH:MEDIUM:!ADH:!RC4:!aNULL:!MD5:!DSS:!DES:!3DES:!SEED:!kRSA
+
+# Global mail storage settings
+# TODO shouldn't we use something more explicit that ~ (will be vmail's home directory)
+#      which is just safe because we created the user earlier
+mail_location = maildir:{{_dovecot_config.vmail.directory | mandatory}}
+mail_gid = {{_dovecot_config.vmail.group}}
+mail_uid = {{_dovecot_config.vmail.user}}
+mail_debug = no
+
+namespace inbox {
+  # Create the default IMAP INBOX namespace
+  type = private
+  inbox = yes
+
+  # These mailboxes are widely used and could perhaps be created automatically:
+  mailbox Drafts {
+    special_use = \Drafts
+    auto = subscribe
+  }
+  mailbox Junk {
+    special_use = \Junk
+    auto = subscribe
+  }
+  mailbox Trash {
+    special_use = \Trash
+    auto = subscribe
+  }
+
+  # For \Sent mailboxes there are two widely used names. We'll mark both of
+  # them as \Sent. User typically deletes one of them if duplicates are created.
+  mailbox Sent {
+    special_use = \Sent
+    auto = subscribe
+  }
+
+  mailbox Archive {
+    special_use = \Archive
+    auto = subscribe
+  }
+
+}
+
+################################################################################
+# http://wiki.dovecot.org/Services
+################################################################################
+
+# IMAP service
+service imap-login {
+  inet_listener imap { 
+    address = "{{ _dovecot_config.listen | join(',') }}"
+    port = 143
+  }
+  inet_listener imaps {
+    port = 993
+  }
+}
+
+# LMTP service - delivery of mail to Dovecot
+service lmtp {
+  {% if "unix" in lmtp.listen %}
+  unix_listener {{lmtp.unix.path}} {
+    mode = {{lmtp.unix.mode}}
+    user = {{lmtp.unix.owner}} 
+    group = {{lmtp.unix.group}} 
+  }
+  {% endif %}
+  {% if "inet" in lmtp.listen %}
+  inet_listener lmtp {
+    address =  {{ lmtp.inet.addresses | mandatory | join(' ') }}
+    port = {{lmtp.inet.port}}
+  }
+  {% endif %}
+}
+
+# IMAP TODO does this need to be defined?
+service imap {
+
+}
+
+# TODO: What is this for?
+service auth {
+  
+  # Postfix SASL
+  {% if "unix" in auth.listen %}
+  unix_listener {{auth.unix.path}} {
+    mode = {{auth.unix.mode}}
+    user = {{auth.unix.user}}
+    group = {{auth.unix.group}}
+  }
+  {% endif %}
+  {% if "inet" in auth.listen %}
+  inet_listener auth {
+    address = {{auth.inet.addresses | mandatory | join(' ')}}
+    port = {{auth.inet.port}}
+  }
+  {% endif %}
+
+  unix_listener auth-userdb {
+    # Always run the unix-listener for auth-userdb
+  }
+
+}
+
+service auth-worker {
+ user = $default_internal_user
+}
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+  service_count = 1
+}
+
+service managesieve {
+  process_limit = 1024
+}
+
+
+################################################################################
+# Protocol-Specific overrides
+################################################################################
+
+
+# managed.conf.d/15-lda.conf.j2
+protocol lda {
+  mail_plugins = $mail_plugins sieve
+  postmaster_address = postmaster@{{dovecot_hostname}}
+}
+
+# managed.conf.d/20-imapd.conf.j2
+protocol imap {
+  mail_plugins = $mail_plugins mail_log notify imap_quota
+}
+# managed.conf.d/20-lmtpd.conf.j2
+protocol lmtp {
+	mail_plugins = $mail_plugins sieve
+  postmaster_address = postmaster@{{dovecot_hostname}}
+}
+
+
+# managed.conf.d/20-managesieve.conf.j2
+protocol sieve {
+  # Refer to 90-sieve.conf for script quota configuration and configuration of
+  # Sieve execution limits.
+}
+
+
+################################################################################
+# Plugin configuration
+################################################################################
+
+# managed.conf.d/90-antispam.conf.j2
+plugin {
+  # http://johannes.sipsolutions.net/files/antispam.html
+
+  # antispam_debug_target = syslog
+  # antispam_verbose_debug = 1
+
+  antispam_trash = Trash,"Deleted Messages"
+  antispam_spam = Junk;Spam;SPAM
+
+  antispam_backend = pipe
+
+  antispam_pipe_program = {{_dovecot_config.config_dir}}/dovecot-antispam-sa-learn.sh
+  antispam_pipe_program_args =
+  # antispam_pipe_program_args = --for;%u
+  antispam_pipe_program_spam_arg = --spam
+  antispam_pipe_program_notspam_arg = --ham
+  antispam_pipe_tmpdir = /tmp
+
+  # Do not allow spam to be moved into the `antispam_spam` directory from tools like offlineimap
+  antispam_allow_append_to_spam = no
+}
+
+# managed.conf.d/90-quota.conf.j2
+plugin {
+	quota = maildir:User quota
+	# Allow unlimited storage by default
+	# `quota_rule` is overriden by userdb and passdb queries
+	quota_rule = *:storage=0
+
+	quota_warning = storage=95%% quota-warning 95 %u
+  quota_warning2 = storage=80%% quota-warning 80 %u
+}
+
+service quota-warning {
+  executable = script {{_dovecot_config.config_dir}}/dovecot-quota-warning.py
+  # use some unprivileged user for executing the quota warnings
+  user = {{_dovecot_config.vmail.user}} 
+  unix_listener quota-warning {
+  	user = {{_dovecot_config.vmail.user}} 
+  	group = {{_dovecot_config.vmail.group}}
+  	mode = 0660
+  }
+}
+
+# managed.conf.d/90-sieve.conf.j2
+plugin {
+	sieve = ~/.dovecot.sieve
+	sieve_dir = ~/sieve
+}

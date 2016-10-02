@@ -2,7 +2,11 @@
 
 driver = mysql
 
-connect = host={{ _dovecot_mysql.host }} dbname={{ _dovecot_mysql.database }} user={{ _dovecot_mysql.user }} password={{ _dovecot_mysql.password }}{% if _dovecot_mysql.port is defined %} port={{ _dovecot_mysql.port }}{% endif %}
+connect = host={{ _dovecot_mysql.host }} \
+          dbname={{ _dovecot_mysql.database }} \
+          user={{ _dovecot_mysql.user }} \
+          password={{ _dovecot_mysql.password }} \
+          {% if _dovecot_mysql.port is defined %}port={{ _dovecot_mysql.port }}{% endif %}
 
 default_pass_scheme = SHA512
 
