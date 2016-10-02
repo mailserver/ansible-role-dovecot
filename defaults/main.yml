@@ -5,7 +5,7 @@ os:
   logdir: /var/log
   prefix: 
 
-dovecot_hostname: "mail.example.com"
+dovecot_hostname: "{{ansible_fqdn}}"
 
 dovecot_default_mysql:
   host: "127.0.0.1"
