@@ -110,7 +110,7 @@ service auth {
   {% if "unix" in _dovecot_config.auth.listen %}
   unix_listener {{_dovecot_config.auth.unix.path}} {
     mode = {{_dovecot_config.auth.unix.mode}}
-    user = {{_dovecot_config.auth.unix.user}}
+    user = {{_dovecot_config.auth.unix.owner}}
     group = {{_dovecot_config.auth.unix.group}}
   }
   {% endif %}
