@@ -19,7 +19,7 @@ Examples
       key: "/etc/letsencrypt/live/imap.example.com/privkey.pem"
       dhparam:
         size: 2048
-  mysql:
+  dovecot_mysql:
     host: '127.0.0.1'
     user: 'dovecot'
     password: 'correct horse battery staple'

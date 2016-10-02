@@ -1,8 +1,5 @@
-{% if managesieve_enabled %}
-protocols = imap lmtp sieve
-{% else %}
-protocols = imap lmtp
-{% endif %}
+protocols = imap lmtp {{ 'sieve' if _dovecot_config.managesieve_enabled else '' }}
+
 
 mail_plugins = $mail_plugins quota
 
@@ -86,17 +83,17 @@ service imap-login {
 
 # LMTP service - delivery of mail to Dovecot
 service lmtp {
-  {% if "unix" in lmtp.listen %}
-  unix_listener {{lmtp.unix.path}} {
-    mode = {{lmtp.unix.mode}}
-    user = {{lmtp.unix.owner}} 
-    group = {{lmtp.unix.group}} 
+  {% if "unix" in _dovecot_config.lmtp.listen %}
+  unix_listener {{_dovecot_config.lmtp.unix.path}} {
+    mode = {{_dovecot_config.lmtp.unix.mode}}
+    user = {{_dovecot_config.lmtp.unix.owner}} 
+    group = {{_dovecot_config.lmtp.unix.group}} 
   }
   {% endif %}
-  {% if "inet" in lmtp.listen %}
+  {% if "inet" in _dovecot_config.lmtp.listen %}
   inet_listener lmtp {
-    address =  {{ lmtp.inet.addresses | mandatory | join(' ') }}
-    port = {{lmtp.inet.port}}
+    address =  {{ _dovecot_config.lmtp.inet.addresses | mandatory | join(' ') }}
+    port = {{_dovecot_config.lmtp.inet.port}}
   }
   {% endif %}
 }
@@ -110,17 +107,17 @@ service imap {
 service auth {
   
   # Postfix SASL
-  {% if "unix" in auth.listen %}
-  unix_listener {{auth.unix.path}} {
-    mode = {{auth.unix.mode}}
-    user = {{auth.unix.user}}
-    group = {{auth.unix.group}}
+  {% if "unix" in _dovecot_config.auth.listen %}
+  unix_listener {{_dovecot_config.auth.unix.path}} {
+    mode = {{_dovecot_config.auth.unix.mode}}
+    user = {{_dovecot_config.auth.unix.user}}
+    group = {{_dovecot_config.auth.unix.group}}
   }
   {% endif %}
-  {% if "inet" in auth.listen %}
+  {% if "inet" in _dovecot_config.auth.listen %}
   inet_listener auth {
-    address = {{auth.inet.addresses | mandatory | join(' ')}}
-    port = {{auth.inet.port}}
+    address = {{_dovecot_config.auth.inet.addresses | mandatory | join(' ')}}
+    port = {{_dovecot_config.auth.inet.port}}
   }
   {% endif %}
 

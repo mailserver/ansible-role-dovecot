@@ -22,7 +22,7 @@ dovecot_default_config:
     key: "/etc/letsencrypt/live/{{ dovecot_hostname }}/privkey.pem"
     certificate: "/etc/letsencrypt/live/{{ dovecot_hostname }}/fullchain.pem"
     dhparams:
-      size: 2048
+      length: 2048
       file: "{{ os.prefix }}/etc/ssl/postfix_dhparams.pem"
 
   vmail:
