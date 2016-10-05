@@ -28,7 +28,7 @@ ssl_cipher_list =  HIGH:MEDIUM:!ADH:!RC4:!aNULL:!MD5:!DSS:!DES:!3DES:!SEED:!kRSA
 # Global mail storage settings
 # TODO shouldn't we use something more explicit that ~ (will be vmail's home directory)
 #      which is just safe because we created the user earlier
-mail_location = maildir:{{_dovecot_config.vmail.directory | mandatory}}
+mail_location = maildir:%h
 mail_gid = {{_dovecot_config.vmail.group}}
 mail_uid = {{_dovecot_config.vmail.user}}
 mail_debug = no
