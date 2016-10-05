@@ -25,7 +25,7 @@ default_pass_scheme = SHA512
 #   %d = domain part of user@domain
 # 
 password_query = SELECT \
-	mail, \
+	CONCAT('maildir:{{ _dovecot_config.vmail.directory }}/', home) AS mail, \
 	passwd as password, \
 	CASE WHEN `home_quota_storage` LIKE '' THEN NULL ELSE CONCAT('*:bytes=', home_quota_storage) END AS userdb_quota_rule \
 	FROM account WHERE mail = '%u'
@@ -39,7 +39,7 @@ password_query = SELECT \
 # None of these are strictly required.
 # uid and gid are defined in 10-auth.conf.
 user_query = SELECT \
-	CONCAT('{{ _dovecot_config.vmail.directory }}/', home) AS home, \
+	CONCAT('maildir:{{ _dovecot_config.vmail.directory }}/', home) AS mail, \
 	CASE WHEN `home_quota_storage` LIKE '' THEN NULL ELSE CONCAT('*:bytes=', home_quota_storage) END AS quota_rule \
 	FROM account WHERE mail = '%u'
 
