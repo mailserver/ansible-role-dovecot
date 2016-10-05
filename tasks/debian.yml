@@ -10,3 +10,7 @@
     - dovecot-core
     - dovecot-imapd
     - dovecot-mysql
+    - dovecot-lmtpd
+    # ToDo: make Sieve optional
+    - dovecot-managesieved
+    - dovecot-sieve
