@@ -40,6 +40,7 @@ password_query = SELECT \
 # uid and gid are defined in 10-auth.conf.
 user_query = SELECT \
 	CONCAT('maildir:{{ _dovecot_config.vmail.directory }}/', home) AS mail, \
+	CONCAT('{{ _dovecot_config.vmail.directory }}/', home) AS mail, \
 	CASE WHEN `home_quota_storage` LIKE '' THEN NULL ELSE CONCAT('*:bytes=', home_quota_storage) END AS quota_rule \
 	FROM account WHERE mail = '%u'
 
