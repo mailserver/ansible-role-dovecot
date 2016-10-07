@@ -63,7 +63,7 @@ dovecot_default_config:
       addresses: ["::1"] 
       port: 10025
     unix:
-      path: /var/spool/postfix/private/dovecot-lmtp
+      path: /var/spool/postfix/private/lmtp
       owner: postfix
       group: postfix
       mode: 0660
