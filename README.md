@@ -1,7 +1,7 @@
 Ansible Role: Dovecot
 =====================
 
-[Dovecot](http://www.dovecot.org/) is an open source IMAP and POP3 email server for Linux/UNIX-like systems, written with security primarily in mind.
+[Dovecot](http://www.dovecot.org/) is an open source IMAP email server for Linux/UNIX-like systems, written with security primarily in mind.
 
 This role is part of the [Mailserver](https://github.com/mailserver) project. Dovecot is used as virtual mail transport for Postfix and IMAP server.
 
