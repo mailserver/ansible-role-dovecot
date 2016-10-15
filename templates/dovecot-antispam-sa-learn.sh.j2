@@ -1,0 +1,31 @@
+#!/bin/sh
+sudo -u "{{ _dovecot_config.antispam.user }}" /etc/dovecot/sa-learn-wrapper.sh $*
+
+
+
+
+#!/bin/bash
+
+pid=$$
+
+# remove the # from next line to background learner
+#(
+{
+echo "$(date) ${pid}-start ($*) /tmp/sendmail-msg-$$.txt"
+# set -x
+# id -a
+# env
+cat > /tmp/sendmail-msg-${pid}.txt
+/usr/bin/sa-learn "$@" /tmp/sendmail-msg-${pid}.txt
+echo "$(date) $$-end rc=$?"
+} >/tmp/antispam.${pid}.log 2>&1
+
+cat /tmp/antispam.${pid}.log >>/tmp/sa-learn-pipe.log
+#rm -f /tmp/antispam.${pid}.log /tmp/sendmail-msg-${pid}.txt
+logger /tmp/antispam.${pid}.log /tmp/sendmail-msg-${pid}.txt
+true
+
+# remove the # from next line to background learner
+# ) &
+
+exit 0

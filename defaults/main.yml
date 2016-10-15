@@ -68,3 +68,7 @@ dovecot_default_config:
       group: postfix
       mode: 0660
 
+  antispam:
+    enabled: true
+    user: "{{ antispam_user }}"
+

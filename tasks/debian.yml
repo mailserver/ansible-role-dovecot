@@ -14,3 +14,9 @@
     # ToDo: make Sieve optional
     - dovecot-managesieved
     - dovecot-sieve
+
+- name: Dovecot antispam plugin is installed
+  apt:
+    name: dovecot-antispam
+    state: latest
+  when: _dovecot_config.antispam.enabled

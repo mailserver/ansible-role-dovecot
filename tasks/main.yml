@@ -1,5 +1,12 @@
 ---
 
+# Load OS specific configuration variables
+- include_vars: freebsd.yml
+  when: ansible_distribution == 'FreeBSD'
+
+- include_vars: debian.yml
+  when: (ansible_distribution == 'Debian') or (ansible_distribution == 'Ubuntu')
+
 # Combine Configuration
 - set_fact: _dovecot_config="{{ dovecot_default_config | combine(dovecot_config, recursive=True) }}"
   no_log: true
@@ -79,14 +86,23 @@
   notify:
     - restart dovecot
 
-# TODO
-# Antispam bridge  
-#- name: 
-#    - src: sudoers.d/dovecot-antispam-sa-learn.j2
-#      mode: "u=rw,g=,o="
-#
-#- src: dovecot-antispam-sa-learn.sh
-#      mode: "u=rx,g=rx,o=rx"
-#      owner: "{{vmail_user}}"
-#      group: "{{vmail_group}}"
-#
+# Antispam bridge
+
+- name: dovecot user has permission train sa-learn using sudo 
+  template:
+    src: sudoers.d/dovecot-antispam-sa-learn.j2
+    dest: "/etc/sudoers.d/dovecot-antispam-sa-learn"
+    owner: root
+    group: root
+    mode: 0440
+  when: _dovecot_config.antispam.enabled == true
+
+- name: sa-learn wrapper script for Dovecot is available
+  template:
+    src: dovecot-antispam-sa-learn.sh.j2
+    dest: "{{ _dovecot_config.config_dir }}/dovecot-antispam-sa-learn.sh"
+    owner: "{{ _dovecot_config.vmail.user }}"
+    group: "{{ _dovecot_config.vmail.group }}"
+    mode: 0550
+  when: _dovecot_config.antispam.enabled == true
+

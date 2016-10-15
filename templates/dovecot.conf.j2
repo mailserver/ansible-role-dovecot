@@ -156,14 +156,15 @@ protocol lda {
 
 # managed.conf.d/20-imapd.conf.j2
 protocol imap {
-  mail_plugins = $mail_plugins mail_log notify imap_quota
-}
-# managed.conf.d/20-lmtpd.conf.j2
-protocol lmtp {
-	mail_plugins = $mail_plugins sieve
-  postmaster_address = postmaster@{{dovecot_hostname}}
+  mail_plugins = $mail_plugins mail_log notify imap_quota{% if _dovecot_config.antispam.enabled == true %} antispam{% endif %}
+
 }
 
+# managed.conf.d/20-lmtpd.conf.j2
+protocol lmtp {
+  mail_plugins = $mail_plugins sieve
+  postmaster_address = postmaster@{{dovecot_hostname}}
+}
 
 # managed.conf.d/20-managesieve.conf.j2
 protocol sieve {
@@ -176,6 +177,7 @@ protocol sieve {
 # Plugin configuration
 ################################################################################
 
+{% if _dovecot_config.antispam.enabled %}
 # managed.conf.d/90-antispam.conf.j2
 plugin {
   # http://johannes.sipsolutions.net/files/antispam.html
@@ -188,7 +190,7 @@ plugin {
 
   antispam_backend = pipe
 
-  antispam_pipe_program = {{_dovecot_config.config_dir}}/dovecot-antispam-sa-learn.sh
+  antispam_pipe_program = {{ _dovecot_config.config_dir }}/dovecot-antispam-sa-learn.sh
   antispam_pipe_program_args =
   # antispam_pipe_program_args = --for;%u
   antispam_pipe_program_spam_arg = --spam
@@ -199,6 +201,7 @@ plugin {
   antispam_allow_append_to_spam = no
 }
 
+{% endif %}
 # managed.conf.d/90-quota.conf.j2
 plugin {
 	quota = maildir:User quota
